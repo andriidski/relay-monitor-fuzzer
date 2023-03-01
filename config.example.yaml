@@ -1,0 +1,37 @@
+---
+network:
+  name: "sepolia"
+  genesis_fork_version: "0x90000069"
+consensus:
+  endpoint: "http://localhost:5052"
+api:
+  host: "localhost"
+  port: 8088
+builder:
+  secret_key: "0x0f79a1807a8da8fc978ae1122db7611e752487e014a8784e0277f8d5f371bc86"
+fuzzer:
+  builder_bid_fault:
+    public_key:
+      enabled: false
+      rate: 50
+    signature:
+      enabled: false
+      rate: 50
+    parent_hash:
+      enabled: false
+      rate: 50
+    randao:
+      enabled: false
+      rate: 20
+    block_number:
+      enabled: false
+      rate: 50
+    gas_limit:
+      enabled: false
+      rate: 50
+    timestamp:
+      enabled: false
+      rate: 50
+    basefee:
+      enabled: false
+      rate: 10
