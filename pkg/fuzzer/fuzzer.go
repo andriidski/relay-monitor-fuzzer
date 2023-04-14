@@ -8,6 +8,7 @@ import (
 	"github.com/andriidski/rm-builder-fuzzer/pkg/api"
 	"github.com/andriidski/rm-builder-fuzzer/pkg/builder"
 	"github.com/andriidski/rm-builder-fuzzer/pkg/consensus"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/flashbots/go-boost-utils/bls"
 	boostTypes "github.com/flashbots/go-boost-utils/types"
@@ -37,6 +38,15 @@ func New(ctx context.Context, config *Config, zapLogger *zap.Logger) (*Fuzzer, e
 		return nil, fmt.Errorf("invalid genesisForkVersion: %w", err)
 	}
 
+	var dataVersion spec.DataVersion
+	if config.Network.Version == "bellatrix" {
+		dataVersion = spec.DataVersionBellatrix
+	} else if config.Network.Version == "capella" {
+		dataVersion = spec.DataVersionCapella
+	} else {
+		logger.Fatal("invalid version: %s", config.Network.Version)
+	}
+
 	var genesisForkVersion [4]byte
 	copy(genesisForkVersion[:], genesisForkVersionBytes[:4])
 	builderSigningDomain := boostTypes.ComputeDomain(boostTypes.DomainTypeAppBuilder, genesisForkVersion, boostTypes.Root{})
@@ -59,7 +69,7 @@ func New(ctx context.Context, config *Config, zapLogger *zap.Logger) (*Fuzzer, e
 	builder := builder.New(&config.Fuzzer.BuilderBidFaultConfig, consensusClient, clock, builderSk, builderSigningDomain, logger)
 
 	// Instantiate the API server.
-	apiServer := api.New(config.API, zapLogger, builder)
+	apiServer := api.New(config.API, dataVersion, zapLogger, builder)
 
 	return &Fuzzer{
 		logger:  zapLogger,

@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/andriidski/rm-builder-fuzzer/pkg/builder"
-	boostTypes "github.com/flashbots/go-boost-utils/types"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -25,13 +25,16 @@ type API struct {
 	logger *zap.SugaredLogger
 
 	builder *builder.Builder
+
+	version spec.DataVersion
 }
 
-func New(config *APIConfig, logger *zap.Logger, builder *builder.Builder) *API {
+func New(config *APIConfig, version spec.DataVersion, logger *zap.Logger, builder *builder.Builder) *API {
 	return &API{
 		config:  config,
 		logger:  logger.Sugar(),
 		builder: builder,
+		version: version,
 	}
 }
 
@@ -82,18 +85,25 @@ func (api *API) handleGetHeader(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	signedBuilderBid, err := api.builder.GetSignedBuilderBid(slot, parentHashHex, proposerPubkeyHex)
+	signedBuilderBid, err := api.builder.GetSignedBuilderBid(api.version, slot, parentHashHex, proposerPubkeyHex)
 	if err != nil {
 		api.respondError(w, http.StatusInternalServerError, "error getting header")
 		return
 	}
-
-	getHeaderResponse := &boostTypes.GetHeaderResponse{
-		Version: "capella",
-		Data:    signedBuilderBid,
+	switch api.version {
+	case spec.DataVersionBellatrix:
+		api.respondOK(w, &GetHeaderResponseBellatrix{
+			Version: api.version.String(),
+			Data:    signedBuilderBid.Bellatrix,
+		})
+	case spec.DataVersionCapella:
+		api.respondOK(w, &GetHeaderResponseCapella{
+			Version: api.version.String(),
+			Data:    signedBuilderBid.Capella,
+		})
+	default:
+		api.respondError(w, http.StatusInternalServerError, "unknown data version")
 	}
-
-	api.respondOK(w, getHeaderResponse)
 }
 
 func (api *API) handleGetStatus(w http.ResponseWriter, req *http.Request) {

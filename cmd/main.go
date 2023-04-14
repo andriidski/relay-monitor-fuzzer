@@ -43,6 +43,8 @@ func main() {
 	if err != nil {
 		logger.Fatalf("could not load config: %v", err)
 	}
+	logger.Infof("fuzzing builder bid fault config: %v", config.Fuzzer.BuilderBidFaultConfig.String())
+	logger.Infow("fuzzing network config", "network", config.Network.String())
 
 	ctx := context.Background()
 	logger.Infof("starting builder fuzzer for %s network", config.Network.Name)

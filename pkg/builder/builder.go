@@ -2,17 +2,28 @@ package builder
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
 
 	"github.com/andriidski/rm-builder-fuzzer/pkg/consensus"
+	"github.com/attestantio/go-builder-client/api/bellatrix"
+	capella "github.com/attestantio/go-builder-client/api/capella"
+	builderspec "github.com/attestantio/go-builder-client/spec"
+	consensusspec "github.com/attestantio/go-eth2-client/spec"
+	consensusbellatrix "github.com/attestantio/go-eth2-client/spec/bellatrix"
+	consensuscapella "github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	utilbellatrix "github.com/attestantio/go-eth2-client/util/bellatrix"
+	utilcapella "github.com/attestantio/go-eth2-client/util/capella"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/beacon"
 	coreTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/flashbots/go-boost-utils/bls"
 	boostTypes "github.com/flashbots/go-boost-utils/types"
+	"github.com/holiman/uint256"
 
 	"go.uber.org/zap"
 )
@@ -203,64 +214,246 @@ func (builder *Builder) executableDataToExecutionPayload(data *beacon.Executable
 	}, nil
 }
 
-func (builder *Builder) getExecutionPayload(slot uint64) (*boostTypes.ExecutionPayload, error) {
-	return builder.executableDataToExecutionPayload(builder.generateExecutableData(slot))
-}
-
-func (builder *Builder) getValue() (*boostTypes.U256Str, error) {
-	value := new(boostTypes.U256Str)
-	err := value.FromBig(big.NewInt(0))
+func (builder *Builder) getExecutionPayloadBellatrix(slot uint64) (*consensusbellatrix.ExecutionPayload, error) {
+	data := builder.generateExecutableData(slot)
+	payload, err := builder.executableDataToExecutionPayload(data)
 	if err != nil {
-		builder.logger.Errorf("could not set block value", "err", err)
 		return nil, err
 	}
 
-	return value, nil
-}
-
-func (builder *Builder) GetSignedBuilderBid(slot uint64, parentHashHex string, proposerPubkeyHex string) (*boostTypes.SignedBuilderBid, error) {
-	bid, err := builder.GetBuilderBid(slot, parentHashHex, proposerPubkeyHex)
-	if err != nil {
-		builder.logger.Errorf("could not get bid", "err", err)
-		return nil, err
+	transactions := make([]consensusbellatrix.Transaction, len(payload.Transactions))
+	for i, tx := range payload.Transactions {
+		transactions[i] = consensusbellatrix.Transaction(tx)
 	}
 
-	signature, err := boostTypes.SignMessage(bid, builder.builderSigningDomain, builder.getSecretKey())
-	if err != nil {
-		builder.logger.Errorf("could not sign bid", "err", err)
-		return nil, err
-	}
-
-	return &boostTypes.SignedBuilderBid{
-		Signature: signature,
-		Message:   bid,
+	return &consensusbellatrix.ExecutionPayload{
+		ParentHash:    phase0.Hash32(payload.ParentHash),
+		FeeRecipient:  consensusbellatrix.ExecutionAddress(payload.FeeRecipient),
+		StateRoot:     payload.StateRoot,
+		ReceiptsRoot:  payload.ReceiptsRoot,
+		LogsBloom:     payload.LogsBloom,
+		PrevRandao:    payload.Random,
+		BlockNumber:   payload.BlockNumber,
+		GasLimit:      payload.GasLimit,
+		GasUsed:       payload.GasUsed,
+		Timestamp:     payload.Timestamp,
+		ExtraData:     payload.ExtraData,
+		BaseFeePerGas: payload.BaseFeePerGas,
+		BlockHash:     phase0.Hash32(payload.BlockHash),
+		Transactions:  transactions,
 	}, nil
 }
 
-func (builder *Builder) GetBuilderBid(slot uint64, parentHashHex string, proposerPubkeyHex string) (*boostTypes.BuilderBid, error) {
-	// Generate some execution payload.
-	executionPayload, err := builder.getExecutionPayload(slot)
+func (builder *Builder) getExecutionPayloadCapella(slot uint64) (*consensuscapella.ExecutionPayload, error) {
+	data := builder.generateExecutableData(slot)
+	payload, err := builder.executableDataToExecutionPayload(data)
 	if err != nil {
 		return nil, err
+	}
+
+	transactions := make([]consensusbellatrix.Transaction, len(payload.Transactions))
+	for i, tx := range payload.Transactions {
+		transactions[i] = consensusbellatrix.Transaction(tx)
+	}
+
+	return &consensuscapella.ExecutionPayload{
+		ParentHash:    phase0.Hash32(payload.ParentHash),
+		FeeRecipient:  consensusbellatrix.ExecutionAddress(payload.FeeRecipient),
+		StateRoot:     payload.StateRoot,
+		ReceiptsRoot:  payload.ReceiptsRoot,
+		LogsBloom:     payload.LogsBloom,
+		PrevRandao:    payload.Random,
+		BlockNumber:   payload.BlockNumber,
+		GasLimit:      payload.GasLimit,
+		GasUsed:       payload.GasUsed,
+		Timestamp:     payload.Timestamp,
+		ExtraData:     payload.ExtraData,
+		BaseFeePerGas: payload.BaseFeePerGas,
+		BlockHash:     phase0.Hash32(payload.BlockHash),
+		Transactions:  transactions,
+	}, nil
+}
+
+func (builder *Builder) getValue() *uint256.Int {
+	return uint256.NewInt(0)
+}
+
+func (builder *Builder) GetSignedBuilderBidBellatrix(slot uint64, parentHashHex string, proposerPubkeyHex string) (bellatrix.SignedBuilderBid, error) {
+	bid, err := builder.GetBuilderBidBellatrix(slot, parentHashHex, proposerPubkeyHex)
+	if err != nil {
+		builder.logger.Errorf("could not get bid", "err", err)
+		return bellatrix.SignedBuilderBid{}, err
+	}
+
+	signature, err := boostTypes.SignMessage(&bid, builder.builderSigningDomain, builder.getSecretKey())
+	if err != nil {
+		builder.logger.Errorf("could not sign bid", "err", err)
+		return bellatrix.SignedBuilderBid{}, err
+	}
+
+	return bellatrix.SignedBuilderBid{
+		Message:   &bid,
+		Signature: phase0.BLSSignature(signature),
+	}, nil
+}
+
+func (builder *Builder) GetSignedBuilderBidCapella(slot uint64, parentHashHex string, proposerPubkeyHex string) (capella.SignedBuilderBid, error) {
+	bid, err := builder.GetBuilderBidCapella(slot, parentHashHex, proposerPubkeyHex)
+	if err != nil {
+		builder.logger.Errorf("could not get bid", "err", err)
+		return capella.SignedBuilderBid{}, err
+	}
+
+	signature, err := boostTypes.SignMessage(&bid, builder.builderSigningDomain, builder.getSecretKey())
+	if err != nil {
+		builder.logger.Errorf("could not sign bid", "err", err)
+		return capella.SignedBuilderBid{}, err
+	}
+
+	return capella.SignedBuilderBid{
+		Message:   &bid,
+		Signature: phase0.BLSSignature(signature),
+	}, nil
+}
+
+func (builder *Builder) GetSignedBuilderBid(version consensusspec.DataVersion, slot uint64, parentHashHex string, proposerPubkeyHex string) (*builderspec.VersionedSignedBuilderBid, error) {
+	switch version {
+	case consensusspec.DataVersionBellatrix:
+		signedBid, err := builder.GetSignedBuilderBidBellatrix(slot, parentHashHex, proposerPubkeyHex)
+		if err != nil {
+			return nil, err
+		}
+
+		return &builderspec.VersionedSignedBuilderBid{
+			Version:   consensusspec.DataVersionCapella,
+			Bellatrix: &signedBid,
+			Capella:   nil,
+		}, nil
+	case consensusspec.DataVersionCapella:
+		signedBid, err := builder.GetSignedBuilderBidCapella(slot, parentHashHex, proposerPubkeyHex)
+		if err != nil {
+			return nil, err
+		}
+		return &builderspec.VersionedSignedBuilderBid{
+			Version:   consensusspec.DataVersionBellatrix,
+			Bellatrix: nil,
+			Capella:   &signedBid,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown version: %v", version)
+	}
+}
+
+func (builder *Builder) GetBuilderBidBellatrix(slot uint64, parentHashHex string, proposerPubkeyHex string) (bellatrix.BuilderBid, error) {
+	// Generate some execution payload.
+	executionPayload, err := builder.getExecutionPayloadBellatrix(slot)
+	if err != nil {
+		return bellatrix.BuilderBid{}, err
 	}
 
 	// Generate some block value.
-	value, err := builder.getValue()
-	if err != nil {
-		return nil, err
-	}
+	value := builder.getValue()
 
 	// Convert the execution payload to a payload header.
-	header, err := boostTypes.PayloadToPayloadHeader(executionPayload)
+	header, err := BellatrixPayloadToPayloadHeader(executionPayload)
+	if err != nil {
+		return bellatrix.BuilderBid{}, err
+	}
+
+	builderBid := bellatrix.BuilderBid{
+		Value:  value,
+		Header: header,
+		Pubkey: phase0.BLSPubKey(builder.getPublicKey()),
+	}
+
+	return builderBid, nil
+}
+
+func (builder *Builder) GetBuilderBidCapella(slot uint64, parentHashHex string, proposerPubkeyHex string) (capella.BuilderBid, error) {
+	// Generate some execution payload.
+	executionPayload, err := builder.getExecutionPayloadCapella(slot)
+	if err != nil {
+		return capella.BuilderBid{}, err
+	}
+
+	// Generate some block value.
+	value := builder.getValue()
+
+	// Convert the execution payload to a payload header.
+	header, err := CapellaPayloadToPayloadHeader(executionPayload)
+	if err != nil {
+		return capella.BuilderBid{}, err
+	}
+
+	builderBid := capella.BuilderBid{
+		Value:  value,
+		Header: header,
+		Pubkey: phase0.BLSPubKey(builder.getPublicKey()),
+	}
+
+	return builderBid, nil
+}
+
+func BellatrixPayloadToPayloadHeader(p *consensusbellatrix.ExecutionPayload) (*consensusbellatrix.ExecutionPayloadHeader, error) {
+	if p == nil {
+		return nil, fmt.Errorf("nil payload")
+	}
+
+	transactions := utilbellatrix.ExecutionPayloadTransactions{Transactions: p.Transactions}
+	transactionsRoot, err := transactions.HashTreeRoot()
 	if err != nil {
 		return nil, err
 	}
 
-	builderBid := boostTypes.BuilderBid{
-		Value:  *value,
-		Header: header,
-		Pubkey: builder.getPublicKey(),
+	return &consensusbellatrix.ExecutionPayloadHeader{
+		ParentHash:       p.ParentHash,
+		FeeRecipient:     p.FeeRecipient,
+		StateRoot:        p.StateRoot,
+		ReceiptsRoot:     p.ReceiptsRoot,
+		LogsBloom:        p.LogsBloom,
+		PrevRandao:       p.PrevRandao,
+		GasLimit:         p.GasLimit,
+		GasUsed:          p.GasUsed,
+		Timestamp:        p.Timestamp,
+		ExtraData:        p.ExtraData,
+		BaseFeePerGas:    p.BaseFeePerGas,
+		BlockHash:        p.BlockHash,
+		TransactionsRoot: transactionsRoot,
+	}, nil
+}
+
+func CapellaPayloadToPayloadHeader(p *consensuscapella.ExecutionPayload) (*consensuscapella.ExecutionPayloadHeader, error) {
+	if p == nil {
+		return nil, fmt.Errorf("nil payload")
 	}
 
-	return &builderBid, nil
+	transactions := utilbellatrix.ExecutionPayloadTransactions{Transactions: p.Transactions}
+	transactionsRoot, err := transactions.HashTreeRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	withdrawals := utilcapella.ExecutionPayloadWithdrawals{Withdrawals: p.Withdrawals}
+	withdrawalsRoot, err := withdrawals.HashTreeRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	return &consensuscapella.ExecutionPayloadHeader{
+		ParentHash:       p.ParentHash,
+		FeeRecipient:     p.FeeRecipient,
+		StateRoot:        p.StateRoot,
+		ReceiptsRoot:     p.ReceiptsRoot,
+		LogsBloom:        p.LogsBloom,
+		PrevRandao:       p.PrevRandao,
+		BlockNumber:      p.BlockNumber,
+		GasLimit:         p.GasLimit,
+		GasUsed:          p.GasUsed,
+		Timestamp:        p.Timestamp,
+		ExtraData:        p.ExtraData,
+		BaseFeePerGas:    p.BaseFeePerGas,
+		BlockHash:        p.BlockHash,
+		TransactionsRoot: transactionsRoot,
+		WithdrawalsRoot:  withdrawalsRoot,
+	}, nil
 }
