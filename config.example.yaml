@@ -2,7 +2,6 @@
 network:
   name: "sepolia"
   version: "capella"
-  genesis_fork_version: "0x90000069"
 consensus:
   endpoint: "http://localhost:5052"
 api:

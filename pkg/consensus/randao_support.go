@@ -3,7 +3,7 @@ package consensus
 import (
 	"context"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/types"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 )

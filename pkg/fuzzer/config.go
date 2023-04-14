@@ -3,8 +3,8 @@ package fuzzer
 import (
 	"strings"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/api"
-	"github.com/andriidski/rm-builder-fuzzer/pkg/builder"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/api"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/builder"
 )
 
 type FuzzerConfig struct {
@@ -13,9 +13,8 @@ type FuzzerConfig struct {
 }
 
 type NetworkConfig struct {
-	Name               string `yaml:"name"`
-	Version            string `yaml:"version"`
-	GenesisForkVersion string `yaml:"genesis_fork_version"`
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
 }
 
 func (c *NetworkConfig) String() string {
@@ -25,8 +24,6 @@ func (c *NetworkConfig) String() string {
 	str.WriteString(c.Name)
 	str.WriteString(", Version: ")
 	str.WriteString(c.Version)
-	str.WriteString(", GenesisForkVersion: ")
-	str.WriteString(c.GenesisForkVersion)
 	str.WriteString("}")
 	return str.String()
 }

@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/consensus"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/consensus"
 	"github.com/attestantio/go-builder-client/api/bellatrix"
 	capella "github.com/attestantio/go-builder-client/api/capella"
 	builderspec "github.com/attestantio/go-builder-client/spec"

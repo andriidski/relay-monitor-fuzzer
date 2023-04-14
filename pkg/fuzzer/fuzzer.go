@@ -5,17 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/api"
-	"github.com/andriidski/rm-builder-fuzzer/pkg/builder"
-	"github.com/andriidski/rm-builder-fuzzer/pkg/consensus"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/api"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/builder"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/consensus"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/flashbots/go-boost-utils/bls"
-	boostTypes "github.com/flashbots/go-boost-utils/types"
 	"go.uber.org/zap"
 )
-
-const eventBufferSize uint = 32
 
 type Fuzzer struct {
 	logger *zap.Logger
@@ -33,11 +30,6 @@ func New(ctx context.Context, config *Config, zapLogger *zap.Logger) (*Fuzzer, e
 		return nil, errors.New("incorrect builder API secret key provided")
 	}
 
-	genesisForkVersionBytes, err := hexutil.Decode(config.Network.GenesisForkVersion)
-	if err != nil {
-		return nil, fmt.Errorf("invalid genesisForkVersion: %w", err)
-	}
-
 	var dataVersion spec.DataVersion
 	if config.Network.Version == "bellatrix" {
 		dataVersion = spec.DataVersionBellatrix
@@ -46,10 +38,6 @@ func New(ctx context.Context, config *Config, zapLogger *zap.Logger) (*Fuzzer, e
 	} else {
 		logger.Fatal("invalid version: %s", config.Network.Version)
 	}
-
-	var genesisForkVersion [4]byte
-	copy(genesisForkVersion[:], genesisForkVersionBytes[:4])
-	builderSigningDomain := boostTypes.ComputeDomain(boostTypes.DomainTypeAppBuilder, genesisForkVersion, boostTypes.Root{})
 
 	builderSk, err := bls.SecretKeyFromBytes(envBuilderSkBytes[:])
 	if err != nil {
@@ -66,7 +54,7 @@ func New(ctx context.Context, config *Config, zapLogger *zap.Logger) (*Fuzzer, e
 
 	// Instantiate a mocked block builder. This is used to create bids with
 	// faults determined by the configuration.
-	builder := builder.New(&config.Fuzzer.BuilderBidFaultConfig, consensusClient, clock, builderSk, builderSigningDomain, logger)
+	builder := builder.New(&config.Fuzzer.BuilderBidFaultConfig, consensusClient, clock, builderSk, consensusClient.SignatureDomainForBuilder(), logger)
 
 	// Instantiate the API server.
 	apiServer := api.New(config.API, dataVersion, zapLogger, builder)

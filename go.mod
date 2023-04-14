@@ -1,4 +1,4 @@
-module github.com/andriidski/rm-builder-fuzzer
+module github.com/andriidski/relay-monitor-fuzzer
 
 go 1.19
 

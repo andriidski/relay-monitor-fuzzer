@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/types"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 )
 
 type Clock struct {

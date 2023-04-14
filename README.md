@@ -1,27 +1,17 @@
-# Relay Monitor Builder/Relay Fuzzer
+# Relay Monitor Relay/Builder Fuzzer
 
-## 🚧 WIP 🚧
+Mini "fuzzer" service to simulate invalid bids / payloads to test data collection by a [relay monitor](https://github.com/ralexstokes/relay-monitor).
 
-Mini "fuzzer" to simulate invalid bids / payloads(TODO) that a [relay monitor](https://github.com/ralexstokes/relay-monitor) then is supposed to catch.
+The service pretends to be a relay and implements just two endpoints:
 
-Implements just two endpoints:
 1. `getHeader()` -> returns a signed builder bid (refer to `builder-specs` for structure)
-2. `getStatus()` -> returns the status of the builder/relay
+2. `getStatus()` -> returns the status of the relay/builder
 
-Behavior is configurable via a config, e.g. `config.example.yaml`
+The specific faulty behavior is configurable under the `builder_bid_fault` field in the [fuzzer config](./config.example.yaml), for example:
 
-```
+```yaml
 ---
-network:
-  name: "sepolia"
-  genesis_fork_version: "0x90000069"
-consensus:
-  endpoint: "http://localhost:5052"
-api:
-  host: "localhost"
-  port: 8088
-builder:
-  secret_key: "0x0f79a1807a8da8fc978ae1122db7611e752487e014a8784e0277f8d5f371bc86"
+...
 fuzzer:
   builder_bid_fault:
     public_key:

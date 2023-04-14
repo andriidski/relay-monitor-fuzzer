@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/crypto"
-	"github.com/andriidski/rm-builder-fuzzer/pkg/types"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/crypto"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 	"github.com/ethereum/go-ethereum/common/math"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/holiman/uint256"

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/crypto"
-	"github.com/andriidski/rm-builder-fuzzer/pkg/types"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/crypto"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 	boostTypes "github.com/flashbots/go-boost-utils/types"
 )
 

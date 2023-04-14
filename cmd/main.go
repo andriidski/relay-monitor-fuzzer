@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	fuzzer "github.com/andriidski/rm-builder-fuzzer/pkg/fuzzer"
+	fuzzer "github.com/andriidski/relay-monitor-fuzzer/pkg/fuzzer"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v3"

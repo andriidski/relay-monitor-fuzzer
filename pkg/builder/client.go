@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/types"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 	boostTypes "github.com/flashbots/go-boost-utils/types"
 )
 

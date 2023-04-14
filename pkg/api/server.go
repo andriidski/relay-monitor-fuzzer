@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/andriidski/rm-builder-fuzzer/pkg/builder"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/builder"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
