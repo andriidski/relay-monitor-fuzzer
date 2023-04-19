@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/andriidski/relay-monitor-fuzzer/pkg/consensus"
+	"github.com/andriidski/relay-monitor-fuzzer/pkg/types"
 	"github.com/attestantio/go-builder-client/api/bellatrix"
 	capella "github.com/attestantio/go-builder-client/api/capella"
 	builderspec "github.com/attestantio/go-builder-client/spec"
@@ -49,6 +50,8 @@ func New(bidFaultConfig *BuilderBidFaultConfig, consensusClient *consensus.Clien
 	pkBytes := bls.PublicKeyFromSecretKey(sk).Compress()
 	pk := boostTypes.PublicKey{}
 	pk.FromSlice(pkBytes)
+
+	logger.Infow("using builder with public key", "pk", pk.String())
 
 	// Seed the random number generator with the current time
 	rand.Seed(time.Now().UnixNano())
@@ -163,6 +166,23 @@ func (builder *Builder) getTimestamp(slot uint64) int64 {
 	}
 }
 
+func (builder *Builder) getBaseFee(slot uint64) *types.Uint256 {
+	basefeeConfig := builder.bidFaultConfig.Basefee
+	badBasefee := uint256.NewInt(0)
+
+	if basefeeConfig.Enabled && roll(basefeeConfig.Rate) {
+		builder.logger.Infow("using bad base fee", "badBasefee", badBasefee.String())
+		return badBasefee
+	} else {
+		expectedBaseFee, err := builder.consensusClient.GetBaseFeeForProposal(slot)
+		if err != nil {
+			builder.logger.Errorw("could not get base fee", "err", err)
+			return badBasefee
+		}
+		return expectedBaseFee
+	}
+}
+
 func (builder *Builder) generateExecutableData(slot uint64) *beacon.ExecutableDataV1 {
 	return &beacon.ExecutableDataV1{
 		ParentHash:   common.Hash(builder.getParentHash(slot)),
@@ -177,7 +197,7 @@ func (builder *Builder) generateExecutableData(slot uint64) *beacon.ExecutableDa
 		Timestamp:    uint64(builder.getTimestamp(slot)),
 		ExtraData:    hexutil.MustDecode("0x0042fafc"),
 
-		BaseFeePerGas: big.NewInt(16),
+		BaseFeePerGas: big.NewInt(0).SetBytes(builder.getBaseFee(slot).Bytes()),
 
 		BlockHash:    common.HexToHash("0xca4147f0d4150183ece9155068f34ee3c375448814e4ca557d482b1d40ee5407"),
 		Transactions: [][]byte{},

@@ -92,11 +92,13 @@ func (api *API) handleGetHeader(w http.ResponseWriter, req *http.Request) {
 	}
 	switch api.version {
 	case spec.DataVersionBellatrix:
+		api.logger.Infof("sending signed builder bid: %+v", signedBuilderBid.Bellatrix)
 		api.respondOK(w, &GetHeaderResponseBellatrix{
 			Version: api.version.String(),
 			Data:    signedBuilderBid.Bellatrix,
 		})
 	case spec.DataVersionCapella:
+		api.logger.Infof("sending signed builder bid: %+v", signedBuilderBid.Capella)
 		api.respondOK(w, &GetHeaderResponseCapella{
 			Version: api.version.String(),
 			Data:    signedBuilderBid.Capella,
