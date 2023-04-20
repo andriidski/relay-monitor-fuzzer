@@ -67,14 +67,14 @@ func New(bidFaultConfig *BuilderBidFaultConfig, consensusClient *consensus.Clien
 	}
 }
 
-func roll(rate int) bool {
-	return rand.Intn(101) <= rate
+func roll(prob float64) bool {
+	return rand.Float64() < prob
 }
 
 func (builder *Builder) getSecretKey() *bls.SecretKey {
 	signatureConfig := builder.bidFaultConfig.Signature
 
-	if signatureConfig.Enabled && roll(signatureConfig.Rate) {
+	if signatureConfig.Enabled && roll(signatureConfig.Probability) {
 		b, err := hexutil.Decode("0x0000000000000000000000000000000000000000000000000000000000000000")
 		if err != nil {
 			builder.logger.Fatalw("incorrect bad secret key")
@@ -93,7 +93,7 @@ func (builder *Builder) getSecretKey() *bls.SecretKey {
 func (builder *Builder) getPublicKey() boostTypes.PublicKey {
 	publicKeyConfig := builder.bidFaultConfig.PublicKey
 
-	if publicKeyConfig.Enabled && roll(publicKeyConfig.Rate) {
+	if publicKeyConfig.Enabled && roll(publicKeyConfig.Probability) {
 		badPublicKey, err := boostTypes.HexToPubkey("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
 		if err != nil {
 			builder.logger.Fatalw("could not create bad public key", "err", err)
@@ -109,7 +109,7 @@ func (builder *Builder) getParentHash(slot uint64) boostTypes.Hash {
 	parentHashConfig := builder.bidFaultConfig.ParentHash
 	badParentHash := boostTypes.Hash{0x00, 0x00}
 
-	if parentHashConfig.Enabled && roll(parentHashConfig.Rate) {
+	if parentHashConfig.Enabled && roll(parentHashConfig.Probability) {
 		builder.logger.Infow("using bad parent hash", "badParentHash", badParentHash)
 		return badParentHash
 	} else {
@@ -125,7 +125,7 @@ func (builder *Builder) getParentHash(slot uint64) boostTypes.Hash {
 func (builder *Builder) getRandom(slot uint64) boostTypes.Hash {
 	randao := builder.bidFaultConfig.Randao
 	badRandom := boostTypes.Hash{0x00, 0x00}
-	if randao.Enabled && roll(randao.Rate) {
+	if randao.Enabled && roll(randao.Probability) {
 		builder.logger.Infow("using bad random", "badRandom", badRandom)
 		return badRandom
 	} else {
@@ -142,7 +142,7 @@ func (builder *Builder) getBlockNumber(slot uint64) uint64 {
 	blockNumberConfig := builder.bidFaultConfig.BlockNumber
 	badBlockNumber := uint64(0)
 
-	if blockNumberConfig.Enabled && roll(blockNumberConfig.Rate) {
+	if blockNumberConfig.Enabled && roll(blockNumberConfig.Probability) {
 		builder.logger.Infow("using bad block number", "badBlockNumber", badBlockNumber)
 		return badBlockNumber
 	} else {
@@ -158,7 +158,7 @@ func (builder *Builder) getBlockNumber(slot uint64) uint64 {
 func (builder *Builder) getTimestamp(slot uint64) int64 {
 	timestampConfig := builder.bidFaultConfig.Timestamp
 	badTimestamp := int64(0)
-	if timestampConfig.Enabled && roll(timestampConfig.Rate) {
+	if timestampConfig.Enabled && roll(timestampConfig.Probability) {
 		builder.logger.Infow("using bad timestamp", "badTimestamp", badTimestamp)
 		return badTimestamp
 	} else {
@@ -170,7 +170,7 @@ func (builder *Builder) getBaseFee(slot uint64) *types.Uint256 {
 	basefeeConfig := builder.bidFaultConfig.Basefee
 	badBasefee := uint256.NewInt(0)
 
-	if basefeeConfig.Enabled && roll(basefeeConfig.Rate) {
+	if basefeeConfig.Enabled && roll(basefeeConfig.Probability) {
 		builder.logger.Infow("using bad base fee", "badBasefee", badBasefee.String())
 		return badBasefee
 	} else {

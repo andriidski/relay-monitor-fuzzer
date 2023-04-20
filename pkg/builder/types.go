@@ -6,8 +6,8 @@ import (
 )
 
 type BuilderBidFaultOption struct {
-	Enabled bool `yaml:"enabled"`
-	Rate    int  `yaml:"rate"`
+	Enabled     bool    `yaml:"enabled"`
+	Probability float64 `yaml:"probability"`
 }
 
 func (c *BuilderBidFaultOption) String() string {
@@ -16,8 +16,8 @@ func (c *BuilderBidFaultOption) String() string {
 	str.WriteString("Enabled: ")
 	str.WriteString(fmt.Sprintf("%t", c.Enabled))
 	if c.Enabled {
-		str.WriteString(", Rate: ")
-		str.WriteString(fmt.Sprintf("%d", c.Rate))
+		str.WriteString(", Probability: ")
+		str.WriteString(fmt.Sprintf("%f", c.Probability))
 	}
 	str.WriteString("}")
 	return str.String()

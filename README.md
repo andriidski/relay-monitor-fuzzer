@@ -16,31 +16,32 @@ fuzzer:
   builder_bid_fault:
     public_key:
       enabled: false
-      rate: 50
+      probability: 0.5
     signature:
       enabled: false
-      rate: 50
+      probability: 0.5
     parent_hash:
       enabled: false
-      rate: 50
+      probability: 0.5
     randao:
       enabled: false
-      rate: 20
+      probability: 0.5
     block_number:
       enabled: false
-      rate: 50
+      probability: 0.5
     gas_limit:
       enabled: false
-      rate: 50
+      probability: 0.5
     timestamp:
-      enabled: false
-      rate: 50
+      enabled: true
+      probability: 0.5
     basefee:
       enabled: false
-      rate: 10
+      probability: 0.5
+
 
 ```
 
 For each option
 - `enabled` toggles on/off
-- `rate` adjusts the probability of that fault being deliberately included in a signed builder bid
+- `probability` adjusts the probability of that fault being deliberately included in a signed builder bid
